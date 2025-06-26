@@ -1,0 +1,605 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Prediksi Omset UMKM - Dashboard Analitik</title>
+    <!-- Bootstrap 5 CSS with Dark mode support -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'prediksi/style.css' %}" />
+  </head>
+  <body>
+    <div class="container py-4">
+      <!-- Header with dark mode toggle -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 mb-0">
+            <i class="fas fa-chart-line text-primary me-2"></i>
+            <span class="text-gradient">UMKM Revenue Predictor</span>
+          </h1>
+          <p class="mb-0" id="text-white">
+            Alat prediksi omset bulanan untuk usaha kecil dan menengah
+          </p>
+        </div>
+        <button id="darkModeToggle" class="btn btn-sm btn-outline-secondary">
+          <i class="fas fa-moon"></i> Dark Mode
+        </button>
+      </div>
+
+      <div class="row">
+        <!-- Main content -->
+        <div class="col-lg-8">
+          <div class="card mb-4">
+            <div
+              class="card-header d-flex justify-content-between align-items-center"
+            >
+              <h5 class="mb-0 text-white">
+                <i class="fas fa-calculator me-2"></i>Prediksi Omset
+              </h5>
+              <span class="badge bg-success">v1.1</span>
+            </div>
+            <div class="card-body">
+              <form
+                method="POST"
+                enctype="multipart/form-data"
+                id="predictionForm"
+              >
+                {% csrf_token %}
+
+                <div class="mb-4">
+                  <label for="data_file" class="form-label fw-bold"
+                    >Upload Data Penjualan</label
+                  >
+
+                  <div id="fileUploadArea" class="file-upload mb-3">
+                    <i
+                      class="fas fa-cloud-upload-alt fa-3x mb-3 text-muted"
+                    ></i>
+                    <h5 class="mb-2">
+                      Seret file ke sini atau klik untuk memilih
+                    </h5>
+                    <p class="text-muted small mb-2">
+                      Format yang didukung: .csv, .xlsx
+                    </p>
+                    <input
+                      type="file"
+                      class="d-none"
+                      name="data_file"
+                      id="data_file"
+                      accept=".csv, .xlsx"
+                      required
+                    />
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-primary"
+                      id="selectFileBtn"
+                    >
+                      <i class="fas fa-folder-open me-1"></i> Pilih File
+                    </button>
+                  </div>
+
+                  <div
+                    id="fileNameDisplay"
+                    class="d-none alert alert-info py-2"
+                  >
+                    <div
+                      class="d-flex justify-content-between align-items-center"
+                    >
+                      <span
+                        ><i class="fas fa-file me-2"></i
+                        ><span id="fileName"></span
+                      ></span>
+                      <button
+                        type="button"
+                        class="btn-close"
+                        id="removeFileBtn"
+                      ></button>
+                    </div>
+                  </div>
+
+                  <div class="alert alert-light mt-3">
+                    <h6 class="alert-heading">
+                      <i class="fas fa-info-circle me-2"></i>Format File yang
+                      Dibutuhkan:
+                    </h6>
+                    <p class="mb-1">File harus berisi kolom-kolom berikut:</p>
+                    <ul class="mb-0">
+                      <li><code>bulan</code> (format: MM atau nama bulan)</li>
+                      <li>
+                        <code>jumlah_transaksi</code> (jumlah total transaksi)
+                      </li>
+                      <li>
+                        <code>total_produk_terjual</code> (unit produk terjual)
+                      </li>
+                      <li>
+                        <code>harga_rata_rata</code> (rata-rata harga produk)
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div class="row mb-4">
+                  <div class="alert alert-info">
+                    <i class="fas fa-brain me-2"></i>Model prediksi:
+                    <strong>XGBoost Regressor</strong>
+                  </div>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                  <button type="submit" class="btn btn-primary" id="submitBtn">
+                    <i class="fas fa-rocket me-1"></i> Mulai Prediksi
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          {% if error %}
+          <div class="alert alert-danger alert-dismissible fade show">
+            <h5 class="alert-heading">
+              <i class="fas fa-exclamation-triangle me-2"></i>Error Memproses
+              File
+            </h5>
+            <p>{{ error }}</p>
+            <hr />
+            <p class="mb-0">
+              Pastikan file Anda memenuhi persyaratan format.
+              <a
+                href="#"
+                data-bs-toggle="modal"
+                data-bs-target="#formatHelpModal"
+                >Klik di sini</a
+              >
+              untuk panduan lebih detail.
+            </p>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="alert"
+            ></button>
+          </div>
+          {% endif %} {% if result %}
+          <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+              <h5 class="mb-0">
+                <i class="fas fa-chart-pie me-2"></i>Hasil Prediksi
+              </h5>
+            </div>
+            <div class="card-body">
+              <div
+                class="d-flex justify-content-between align-items-center mb-4"
+              >
+                <div>
+                  <h5 class="mb-1">Perkiraan Omset</h5>
+                  <p class="mb-0" id="text-white">
+                    Berdasarkan data historis dan model prediksi
+                  </p>
+                </div>
+                <a
+                  href="{% static 'prediksi/hasil_prediksi.xlsx' %}"
+                  class="btn download-btn text-white"
+                  download
+                >
+                  <i class="fas fa-file-excel me-1"></i> Unduh Excel
+                </a>
+              </div>
+
+              <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                  {{ result|safe }}
+                </table>
+              </div>
+
+              <div class="mt-4">
+                <h5><i class="fas fa-chart-bar me-2"></i>Visualisasi Data</h5>
+                <div class="text-center py-4 bg-light rounded">
+                  {% if grafik_url %}
+                  <img
+                    src="{{ grafik_url }}"
+                    alt="Grafik Prediksi Omset"
+                    class="img-fluid"
+                  />
+                  {% endif %}
+                  <p class="text-muted mt-2">
+                    Grafik akan muncul setelah prediksi dijalankan
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+          <div class="card mb-4">
+            <div class="card-header">
+              <h5 class="mb-0 text-white">
+                <i class="fas fa-lightbulb me-2"></i>Panduan Cepat
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="mb-3">
+                <h5 class="d-flex align-items-center">
+                  <span class="feature-icon">
+                    <i class="fas fa-file-import"></i>
+                  </span>
+                  <span>&nbsp;Langkah 1: Siapkan Data</span>
+                </h5>
+                <p>
+                  Pastikan file Anda berformat CSV atau Excel dengan kolom yang
+                  diperlukan.
+                </p>
+              </div>
+
+              <div class="mb-3">
+                <h5 class="d-flex align-items-center">
+                  <span class="feature-icon">
+                    <i class="fas fa-upload"></i>
+                  </span>
+                  <span>&nbsp;Langkah 2: Upload File</span>
+                </h5>
+                <p>
+                  Seret file ke area upload atau klik untuk memilih file dari
+                  komputer Anda.
+                </p>
+              </div>
+              <div>
+                <h5 class="d-flex align-items-center">
+                  <span class="feature-icon">
+                    <i class="fas fa-chart-line"></i>
+                  </span>
+                  <span>&nbsp;Langkah 3: Hasil & Analisis</span>
+                </h5>
+                <p>Lihat prediksi omset dan unduh hasil dalam format Excel.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h5 class="mb-0 text-white">
+                <i class="fas fa-question-circle me-2"></i>Butuh Bantuan?
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="d-grid gap-2">
+                <button
+                  class="btn btn-outline-primary"
+                  data-bs-toggle="modal"
+                  data-bs-target="#formatHelpModal"
+                >
+                  <i class="fas fa-file-alt me-1"></i> Contoh Format File
+                </button>
+                <button id="docModal" class="btn btn-outline-secondary">
+                  <i class="fas fa-book me-1"></i> Dokumentasi
+                </button>
+                <button class="btn btn-outline-info">
+                  <i class="fas fa-headset me-1"></i> Hubungi Dukungan
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="mt-5 pt-4 pb-2 text-center text-muted small">
+        <p class="mb-1" id="text-white">
+          UMKM Revenue Predictor &copy; 2023 - Dibangun dengan Django
+        </p>
+        <p class="mb-0" id="text-white">
+          Versi 1.1 |
+          <a href="#" class="text-decoration-none">Kebijakan Privasi</a> |
+          <a href="#" class="text-decoration-none">Syarat Penggunaan</a>
+        </p>
+      </footer>
+    </div>
+
+    <!-- Format Help Modal -->
+    <div
+      class="modal fade"
+      id="formatHelpModal"
+      tabindex="-1"
+      aria-labelledby="formatHelpModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title add-text-dark" id="formatHelpModalLabel">
+              <i class="fas fa-file-excel me-2"></i>
+              Contoh Format File
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="table-responsive">
+              <table class="table table-bordered">
+                <thead class="table-primary">
+                  <tr>
+                    <th>bulan</th>
+                    <th>jumlah_transaksi</th>
+                    <th>total_produk_terjual</th>
+                    <th>harga_rata_rata</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>01</td>
+                    <td>150</td>
+                    <td>450</td>
+                    <td>75000</td>
+                  </tr>
+                  <tr>
+                    <td>02</td>
+                    <td>180</td>
+                    <td>520</td>
+                    <td>78000</td>
+                  </tr>
+                  <tr>
+                    <td>03</td>
+                    <td>200</td>
+                    <td>600</td>
+                    <td>80000</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="alert alert-info mt-3">
+              <h6><i class="fas fa-download me-2"></i>Unduh Template</h6>
+              <p>
+                Anda dapat mengunduh template file Excel yang sudah disiapkan:
+              </p>
+              <a href="#" class="btn btn-sm btn-success">
+                <i class="fas fa-file-excel me-1"></i> Template Excel
+              </a>
+              <a href="#" class="btn btn-sm btn-secondary ms-2">
+                <i class="fas fa-file-csv me-1"></i> Template CSV
+              </a>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-primary"
+              data-bs-dismiss="modal"
+            >
+              Mengerti
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add these modals near the bottom of your HTML, just before the Bootstrap JS script -->
+
+    <!-- Documentation Modal -->
+    <div
+      class="modal fade"
+      id="documentationModal"
+      tabindex="-1"
+      aria-labelledby="documentationModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title" id="documentationModalLabel">
+              <i class="fas fa-book me-2"></i>Dokumentasi Penggunaan
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="accordion" id="docsAccordion">
+              <div class="accordion-item">
+                <h2 class="accordion-header" id="headingOne">
+                  <button
+                    class="accordion-button"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseOne"
+                    aria-expanded="true"
+                    aria-controls="collapseOne"
+                  >
+                    <i class="fas fa-file-upload me-2"></i> Cara Upload Data
+                  </button>
+                </h2>
+                <div
+                  id="collapseOne"
+                  class="accordion-collapse collapse show"
+                  aria-labelledby="headingOne"
+                  data-bs-parent="#docsAccordion"
+                >
+                  <div class="accordion-body">
+                    <ol>
+                      <li>
+                        Siapkan data penjualan dalam format CSV atau Excel
+                      </li>
+                      <li>
+                        Pastikan kolom yang diperlukan sudah tersedia:
+                        <ul>
+                          <li>
+                            <code>bulan</code> (format: MM atau Nama Bulan)
+                          </li>
+                          <li><code>jumlah_transaksi</code> (angka)</li>
+                          <li><code>total_produk_terjual</code> (angka)</li>
+                          <li><code>harga_rata_rata</code> (angka)</li>
+                        </ul>
+                      </li>
+                      <li>
+                        Klik area upload atau seret file ke area yang disediakan
+                      </li>
+                      <li>Tunggu hingga file terverifikasi</li>
+                    </ol>
+                  </div>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <h2 class="accordion-header" id="headingThree">
+                  <button
+                    class="accordion-button collapsed"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseThree"
+                    aria-expanded="false"
+                    aria-controls="collapseThree"
+                  >
+                    <i class="fas fa-question-circle me-2"></i> FAQ
+                  </button>
+                </h2>
+                <div
+                  id="collapseThree"
+                  class="accordion-collapse collapse"
+                  aria-labelledby="headingThree"
+                  data-bs-parent="#docsAccordion"
+                >
+                  <div class="accordion-body">
+                    <h6>Q: Berapa jumlah data minimal yang dibutuhkan?</h6>
+                    <p>
+                      A: Minimal 12 bulan data untuk hasil prediksi yang
+                      optimal.
+                    </p>
+
+                    <h6 class="mt-3">
+                      Q: Bagaimana jika ada data yang hilang?
+                    </h6>
+                    <p>
+                      A: Sistem akan mencoba menginterpolasi data yang hilang,
+                      namun disarankan untuk melengkapi data sebelum diupload.
+                    </p>
+
+                    <h6 class="mt-3">
+                      Q: Model apa yang digunakan untuk prediksi?
+                    </h6>
+                    <p>
+                      A: Sistem menggunakan XGBoost Regressor yang dioptimalkan
+                      untuk data time series.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Tutup
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Support Modal -->
+    <div
+      class="modal fade"
+      id="supportModal"
+      tabindex="-1"
+      aria-labelledby="supportModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header bg-info text-white">
+            <h5 class="modal-title add-text-dark" id="supportModalLabel">
+              <i class="fas fa-headset me-2"></i>Hubungi Dukungan
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body add-text-dark">
+            <div class="mb-4">
+              <h6><i class="fas fa-envelope me-2"></i> Email Support:</h6>
+              <p>support@umkm-predictor.id</p>
+
+              <h6 class="mt-3"><i class="fas fa-phone me-2"></i> Telepon:</h6>
+              <p>+62 21 1234 5678 (Jam kerja: 09.00-17.00 WIB)</p>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h6 class="mb-0 text-white">
+                  <i class="fas fa-bug me-2"></i> Laporkan Masalah
+                </h6>
+              </div>
+              <div class="card-body">
+                <form>
+                  <div class="mb-3">
+                    <label for="issueType" class="form-label"
+                      >Jenis Masalah</label
+                    >
+                    <select class="form-select" id="issueType">
+                      <option selected>Pilih jenis masalah...</option>
+                      <option>Upload Data</option>
+                      <option>Hasil Prediksi</option>
+                      <option>Lainnya</option>
+                    </select>
+                  </div>
+                  <div class="mb-3">
+                    <label for="issueDescription" class="form-label"
+                      >Deskripsi Masalah</label
+                    >
+                    <textarea
+                      class="form-control"
+                      id="issueDescription"
+                      rows="3"
+                    ></textarea>
+                  </div>
+                  <div class="mb-3">
+                    <label for="screenshot" class="form-label"
+                      >Upload Screenshot (opsional)</label
+                    >
+                    <input class="form-control" type="file" id="screenshot" />
+                  </div>
+                  <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-paper-plane me-1"></i> Kirim Laporan
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Tutup
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'prediksi/script.js' %}"></script>
+  </body>
+</html>
