@@ -1,0 +1,151 @@
+      :root {
+        --primary-color: #4361ee;
+        --secondary-color: #3f37c9;
+        --accent-color: #4cc9f0;
+        --light-bg: #f8f9fa;
+        --dark-bg: #212529;
+      }
+
+      body {
+        background-color: var(--light-bg);
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      .card {
+        border-radius: 12px;
+        border: none;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+      }
+
+      .card-header {
+        background: linear-gradient(
+          135deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        padding: 1.5rem;
+      }
+
+      .btn-primary {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+      }
+
+      .btn-primary:hover {
+        background-color: var(--secondary-color);
+        border-color: var(--secondary-color);
+      }
+
+      .file-upload {
+        border: 2px dashed #dee2e6;
+        border-radius: 8px;
+        padding: 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .file-upload:hover {
+        border-color: var(--accent-color);
+        background-color: rgba(76, 201, 240, 0.05);
+      }
+
+      .file-upload.dragover {
+        border-color: var(--primary-color);
+        background-color: rgba(67, 97, 238, 0.1);
+      }
+
+      .feature-icon {
+        font-size: 2rem;
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+      }
+
+      .result-section {
+        border-left: 4px solid var(--primary-color);
+        padding-left: 1rem;
+      }
+
+      .table-responsive {
+        max-height: 500px;
+        overflow-y: auto;
+      }
+
+      table {
+        font-size: 0.9rem;
+      }
+
+      table th {
+        background-color: var(--primary-color);
+        color: white;
+        position: sticky;
+        top: 0;
+      }
+
+      .download-btn {
+        background: linear-gradient(
+          135deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        border: none;
+        padding: 0.5rem 1.5rem;
+        font-weight: 500;
+      }
+
+      .download-btn:hover {
+        background: linear-gradient(
+          135deg,
+          var(--secondary-color),
+          var(--primary-color)
+        );
+      }
+
+      /* Dark mode styles */
+      .dark-mode {
+        background-color: var(--dark-bg);
+        color: #f8f9fa;
+      }
+
+      .dark-mode .card {
+        background-color: #2c3034;
+        color: #f8f9fa;
+      }
+
+      .dark-mode .file-upload {
+        border-color: #495057;
+        background-color: #343a40;
+      }
+
+      .dark-mode .form-control,
+      .dark-mode .form-select {
+        background-color: #343a40;
+        border-color: #495057;
+        color: #f8f9fa;
+      }
+
+      .dark-mode .table {
+        color: #f8f9fa;
+      }
+
+      .dark-mode .table th {
+        background-color: var(--secondary-color);
+      }
+
+      .dark-mode #text-white {
+        color: #f8f9fa;
+      }
+      .dark-mode .add-text-dark {
+        color: black;
+      }
+
+      .dark-mode .table-striped > tbody > tr:nth-of-type(odd) > * {
+        --bs-table-accent-bg: rgba(255, 255, 255, 0.05);
+        color: #f8f9fa;
+      }
